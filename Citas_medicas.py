@@ -38,34 +38,42 @@ class AdministradorClinica:
         return [cita for cita in self.agenda_citas if cita.id_medico == id_medico]
     
     def guardar_sistema(self):
+        datos = {
+            "agenda_citas": [
+                {
+                    "folio": cita.folio,
+                    "id_medico": cita.id_medico,
+                    "id_paciente": cita.id_paciente,
+                    "fecha_hora": cita.fecha_hora,
+                    "motivo_consulta": cita.motivo_consulta,
+                    "confirmada": cita.confirmada
+                } for cita in self.agenda_citas
+            ]
+        }
+        with open("sistema_clinica.json", "w") as fp:
+            json.dump(datos, fp, indent=4)
 
-    
     def cargar_sistema(self): 
         if os.path.exists("sistema_clinica.json"):  # Verifica si el archivo existe
             with open("sistema_clinica.json", "r") as fp:
                 datos = json.load(fp)
 
-            self.medicos = []
-            for m in datos["medicos"]:
-                medico = Medico(m["id_medico"], m["nombre"], m["especialidad"])
-                self.medicos.append(medico)
-
-            # Reconstruir objetos Paciente
-            self.pacientes = []
-            for p in datos["pacientes"]:
-                paciente = Paciente(p["id_paciente"], p["nombre"], p.get("historial_clinico", []))
-                self.pacientes.append(paciente)
-
             # Reconstruir objetos Cita
             self.agenda_citas = []
             for c in datos["agenda_citas"]:
-                cita = Cita(c["id_medico"], c["id_paciente"], c["folio"], c["fecha_hora"], c["motivo_consulta"])
+                cita = Cita(
+                    c["id_medico"],
+                    c["id_paciente"],
+                    c["folio"],
+                    c["fecha_hora"],
+                    c["motivo_consulta"]
+                )
+                cita.confirmada = c["confirmada"]  # recuperar estado de confirmación
                 self.agenda_citas.append(cita)
 
             print("Sistema cargado correctamente.")
         else:
             print("No se encontró el archivo del sistema. Se iniciará vacío.")
-
 
 class Medico:
     def __init__(self, cedula, id_medico, nombre, especialidad):
@@ -124,7 +132,6 @@ class Cita:
 # Menú interactivo
 if __name__ == "__main__":
     administrador = AdministradorClinica([], [], [])
-    administrador.cargar_sistema()
 
     while True:
         print("Hola bienvenido al sistema de gestión de citas médicas")
@@ -150,20 +157,14 @@ if __name__ == "__main__":
 
         elif opcion == "3":
             id_paciente = input("Ingrese el ID del paciente: ")
-            paciente = administrador.buscar_paciente(id_paciente)
-            if paciente:
-                print("Paciente encontrado:")
-                print(f"ID: {paciente.id_paciente}")
-                print(f"Nombre: {paciente.nombre}")
-                
-                print("Historial clínico:")
-                if paciente.historial_clinico:
-                    for nota in paciente.ver_historial():
-                        print(f"- {nota}")
-                else:
-                    print("No hay notas en el historial clínico.")
+            citas_paciente = [cita for cita in administrador.agenda_citas if cita.id_paciente == id_paciente]
+
+            if citas_paciente:
+                print(f"Paciente encontrado: ID {id_paciente}")
+                for cita in citas_paciente:
+                    print(f"Folio: {cita.folio}, Motivo: {cita.motivo_consulta}")
             else:
-                print("Paciente no encontrado.")
+                print("Paciente no encontrado o sin citas.")
 
         elif opcion == "4":
             id_medico = input("Ingrese el ID del médico: ")
@@ -182,6 +183,3 @@ if __name__ == "__main__":
         elif opcion == "6":
             print("Hasta luego.")
             break
-
-
-
