@@ -1,0 +1,16 @@
+{
+    "medicos": [
+        {
+            "id_medico": "123",
+            "nombre": "Dr. P\u00e9rez",
+            "especialidad": "Cardiolog\u00eda"
+        },
+        {
+            "id_medico": "456",
+            "nombre": "Dra. L\u00f3pez",
+            "especialidad": "Pediatr\u00eda"
+        }
+    ],
+    "pacientes": [],
+    "agenda_citas": []
+}

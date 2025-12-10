@@ -9,29 +9,22 @@ class AdministradorClinica:
         self.agenda_citas = agenda_citas  # Lista de objetos Cita
 
     def crear_cita(self, id_medico, id_paciente, folio, fecha_hora, motivo_consulta):
-        # Validar disponibilidad
+    # Validar que no exista cita con el mismo folio
         for cita in self.agenda_citas:
-            if cita.id_medico == id_medico and cita.fecha_hora == fecha_hora:
-                print(f"El médico {id_medico} ya tiene una cita en {fecha_hora}.")
+            if cita.folio == folio:
+                print("Error: Ya existe una cita con ese folio.")
                 return
 
-        # Buscar médico y paciente
-        medico = self.buscar_medico(id_medico)
-        paciente = self.buscar_paciente(id_paciente)
+            # Validar que el médico no tenga otra cita en la misma fecha/hora
+            if cita.id_medico == id_medico and cita.fecha_hora == fecha_hora:
+                print("Error: El médico ya tiene una cita en esa fecha y hora.")
+                return
 
-        if not medico or not paciente:
-            print("No se encontró médico o paciente.")
-            return
-
-        # Crear cita con IDs
+        # Si pasa las validaciones, se crea la cita
         nueva_cita = Cita(id_medico, id_paciente, folio, fecha_hora, motivo_consulta)
         self.agenda_citas.append(nueva_cita)
-
-        # Mostrar confirmación con datos
         print("Cita creada exitosamente.")
-        print(f"Médico: {medico.nombre}, Especialidad: {medico.especialidad}")
-        print(f"Paciente: {paciente.nombre}, Tel: {paciente.telefono if paciente.telefono else 'No registrado'}")
-
+       
     def cancelar_cita(self, folio):
         self.agenda_citas = [cita for cita in self.agenda_citas if cita.folio != folio]
 
@@ -42,20 +35,10 @@ class AdministradorClinica:
         return None
     
     def ver_agenda_medico(self, id_medico):
-        citas_medico = [cita for cita in self.agenda_citas if cita.id_medico == id_medico]
-        return citas_medico
-
+        return [cita for cita in self.agenda_citas if cita.id_medico == id_medico]
+    
     def guardar_sistema(self):
-        datos = {
-            "medicos": [
-            {"id_medico": "123", "nombre": "Dr. Pérez", "especialidad": "Cardiología"},
-            {"id_medico": "456", "nombre": "Dra. López", "especialidad": "Pediatría"}
-        ],
-        "pacientes": [],
-        "agenda_citas": []
-        }
-        with open("sistema_clinica.json", "w") as fp:
-            json.dump(datos, fp, indent=4)
+
     
     def cargar_sistema(self): 
         if os.path.exists("sistema_clinica.json"):  # Verifica si el archivo existe
@@ -154,13 +137,13 @@ if __name__ == "__main__":
         opcion = input("Elige una opción: ")
 
         if opcion == "1":
-            administrador.crear_cita(
-                input("ID médico: "),
-                input("ID paciente: "),
-                input("Folio: "),
-                input("Fecha y hora: "),
-                input("Motivo de consulta: ")
-            )
+            id_medico = input("Ingrese el ID del médico: ")
+            id_paciente = input("Ingrese el ID del paciente: ")
+            folio = input("Ingrese el folio de la cita: ")
+            fecha_hora = input("Ingrese la fecha y hora de la cita: ")
+            motivo = input("Ingrese el motivo de la consulta: ")
+
+            administrador.crear_cita(id_medico, id_paciente, folio, fecha_hora, motivo)
             
         elif opcion == "2":
             administrador.cancelar_cita(input("Folio de la cita a cancelar: "))
@@ -172,7 +155,6 @@ if __name__ == "__main__":
                 print("Paciente encontrado:")
                 print(f"ID: {paciente.id_paciente}")
                 print(f"Nombre: {paciente.nombre}")
-                print(f"Teléfono: {paciente.telefono if paciente.telefono else 'No registrado'}")
                 
                 print("Historial clínico:")
                 if paciente.historial_clinico:
@@ -184,19 +166,15 @@ if __name__ == "__main__":
                 print("Paciente no encontrado.")
 
         elif opcion == "4":
-            cedula = input("Ingrese la cédula o ID del médico: ")
-            citas = administrador.ver_agenda_medico(cedula)
-
-            for cita in citas:
-                medico = administrador.buscar_medico(cita.id_medico)
-                paciente = administrador.buscar_paciente(cita.id_paciente)
-
-                print(f"Cita Folio: {cita.folio}, Fecha y Hora: {cita.fecha_hora}, Motivo: {cita.motivo_consulta}")
-                if medico:
-                    print(f"Médico: {medico.nombre}, Especialidad: {medico.especialidad}")
-                if paciente:
-                    print(f"Paciente: {paciente.nombre}, Tel: {paciente.telefono}")
-
+            id_medico = input("Ingrese el ID del médico: ")
+            citas = administrador.ver_agenda_medico(id_medico)
+            if citas:
+                print(f"Citas del médico {id_medico}:")
+                for cita in citas:
+                    print(f"Folio: {cita.folio}, Paciente ID: {cita.id_paciente}, Fecha/Hora: {cita.fecha_hora}, Motivo: {cita.motivo_consulta}")
+            else:
+                print("No hay citas para este médico.")
+                
         elif opcion == "5":
             administrador.guardar_sistema()
             print("Sistema guardado correctamente")
